@@ -43,6 +43,18 @@ esac
 
 rm -rf "${SELF_DIR}/vms"
 
+TEMP_DIR="${SELF_DIR}/.temp"
+mkdir -p "${TEMP_DIR}"
+
+VAULT_PASSWORD_PATH="${TEMP_DIR}/.ansible-vault-pw"
+trap "{ rm -f ${VAULT_PASSWORD_PATH}; }" EXIT
+
+if [[ -f "${SELF_DIR}/.env" ]]; then
+  source "${SELF_DIR}/.env"
+fi
+
+jq --null-input -r 'env.VAULT_PASSWORD' >"${VAULT_PASSWORD_PATH}"
+
 pushd "${SELF_DIR}" >/dev/null
 
 PACKER_DIR=packer
@@ -58,6 +70,7 @@ packer fmt -check -diff "${PACKER_FILE}"
 packer init "${PACKER_FILE}"
 packer build \
   -var "os_name=${OS}" \
+  -var "vault_password_file=${VAULT_PASSWORD_PATH}" \
   -var-file="${CONF_FILE}" \
   "${PACKER_FILE}"
 

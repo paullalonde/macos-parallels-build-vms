@@ -4,6 +4,12 @@
   hosts: default
   # gather_facts: false
   tasks:
+    - name: Add SSH key
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ packer_ssh_public_key }}"
+
     - name: Disable Software Updates
       import_role:
         name: disable-software-updates
@@ -12,6 +18,6 @@
       import_role:
         name: install-homebrew
 
-    # - name: Install Xcode
-    #   import_role:
-    #     name: install-xcode
+    - name: Install Xcode
+      import_role:
+        name: install-xcode

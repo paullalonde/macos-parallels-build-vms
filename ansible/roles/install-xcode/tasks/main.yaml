@@ -32,7 +32,14 @@
       command:
         cmd: xcode-select --switch /Applications/Xcode_{{ xcode_version }}.app
 
+    - command:
+        cmd: xcode-select --print-path
+      register: xcode_tools_path
+
+    - debug:
+        msg: "xcode_tools_path = {{ xcode_tools_path }}"
+
     - name: Accept license
       become: true
       command:
-        cmd: xcrun xcodebuild -license accept
+        cmd: /Applications/Xcode_{{ xcode_version }}.app/Contents/Developer/usr/bin/xcodebuild -license accept

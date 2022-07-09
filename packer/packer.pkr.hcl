@@ -25,11 +25,16 @@ variable "ssh_password" {
   sensitive   = true
 }
 
+variable "vault_password_file" {
+  description = "The path to the file containing the Ansible vault password."
+  type        = string
+}
+
 locals {
   ssh_username = "packer"
 }
 
-source "parallels-pvm" "dev" {
+source "parallels-pvm" "main" {
   vm_name                = "macos-${var.os_name}-dev"
   source_path            = var.source_vm
   output_directory       = "vms"
@@ -44,17 +49,19 @@ source "parallels-pvm" "dev" {
 
 build {
   sources = [
-    "source.parallels-pvm.dev",
+    "source.parallels-pvm.main",
   ]
 
   provisioner "ansible" {
-    galaxy_file   = "./ansible/requirements.yaml"
     playbook_file = "./ansible/playbook.yaml"
     groups        = [var.os_name]
+    user          = local.ssh_username
 
     extra_arguments = [
       "--extra-vars",
       "ansible_become_pass=${var.ssh_password}",
+      "--extra-vars",
+      "vault-password-file=${var.vault_password_file}",
     ]
   }
 }

@@ -34,10 +34,6 @@
         SUDO_ASKPASS: /tmp/homebrew-askpass.sh
         NONINTERACTIVE: "1"
 
-    - fetch:
-        src: /Users/{{ ansible_user }}/Desktop/askpass.log
-        dest: logs
-
     - name: Clean up askpass helper
       become: true
       file:
