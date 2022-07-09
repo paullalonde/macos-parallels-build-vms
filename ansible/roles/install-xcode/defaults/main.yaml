@@ -1,0 +1,6 @@
+---
+
+xcode_version: '<REPLACE-ME>'
+xcode_xip_base_url: '<REPLACE-ME>'
+
+xcode_xip_extraction_timeout: 3600

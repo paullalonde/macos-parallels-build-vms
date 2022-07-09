@@ -1,0 +1,5 @@
+.temp/
+vms/
+.env
+secrets.pkrvars.hcl
+.DS_Store

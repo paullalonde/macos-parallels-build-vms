@@ -1,0 +1,10 @@
+---
+
+- include_tasks:
+    file: disable-one-default.yaml
+  loop:
+    - AutomaticCheckEnabled
+    - AutomaticDownload
+    - AutomaticallyInstallMacOSUpdates
+    - ConfigDataInstall
+    - CriticalUpdateInstall

@@ -1,1 +1,1 @@
-# macos-parallels-build-vms
+# MacOS Parallels Build VMs

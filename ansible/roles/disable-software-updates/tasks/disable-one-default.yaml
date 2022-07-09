@@ -1,0 +1,26 @@
+---
+
+# `defaults` returns a non-zero exit code if the requested default doesn't exist.
+# We consider this to not be a failure condition.
+- name: Read {{ item }}
+  command:
+    argv:
+      - defaults
+      - read
+      - /Library/Preferences/com.apple.SoftwareUpdate
+      - "{{ item }}"
+  register: software_update_setting
+  changed_when: false
+  failed_when: false
+
+- name: Update {{ item }}
+  become: true
+  command:
+    argv:
+      - defaults
+      - write
+      - /Library/Preferences/com.apple.SoftwareUpdate
+      - "{{ item }}"
+      - -boolean
+      - "FALSE"
+  when: software_update_setting.rc != 0 or software_update_setting.stdout != "0"

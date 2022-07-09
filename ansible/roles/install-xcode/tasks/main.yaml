@@ -1,0 +1,38 @@
+---
+
+- name: Check if Xcode is already installed
+  stat:
+    path: /Applications/Xcode_{{ xcode_version }}.app
+  register: xcode
+
+- when: not xcode.stat.exists
+  block:
+    - name: Download Xcode XIP
+      get_url:
+        url: "{{ xcode_xip_base_url }}/Xcode_{{ xcode_version }}.xip"
+        dest: /Users/{{ ansible_user }}/Downloads/Xcode_{{ xcode_version }}.xip
+        mode: 'u=rw,g=r,o=r'
+      notify: clean-up-xcode-xip
+
+    - name: Expand Xcode XIP
+      become: true
+      command:
+        cmd: xip --expand /Users/{{ ansible_user }}/Downloads/Xcode_{{ xcode_version }}.xip
+        chdir: /Users/{{ ansible_user }}/Downloads
+      poll: 60
+      async: "{{ xcode_xip_extraction_timeout }}" # Prevent SSH connections timing out waiting for extraction
+
+    - name: Move Xcode under /Applications
+      become: true
+      command:
+        cmd: mv /Users/{{ ansible_user }}/Downloads/Xcode.app /Applications/Xcode_{{ xcode_version }}.app
+
+    - name: Select Xcode
+      become: true
+      command:
+        cmd: xcode-select --switch /Applications/Xcode_{{ xcode_version }}.app
+
+    - name: Accept license
+      become: true
+      command:
+        cmd: xcrun xcodebuild -license accept

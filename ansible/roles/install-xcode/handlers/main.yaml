@@ -1,0 +1,7 @@
+---
+
+- name: Clean up Xcode XIP
+  file:
+    dest: /Users/{{ ansible_user }}/Downloads/Xcode_{{ xcode_version }}.xip
+    state: absent
+  listen: clean-up-xcode-xip

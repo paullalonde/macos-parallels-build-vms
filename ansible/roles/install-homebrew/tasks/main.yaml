@@ -1,0 +1,45 @@
+---
+
+- name: Check if Homebrew is already installed
+  stat:
+    path: /usr/local/bin/brew
+  register: brew
+
+- when: not brew.stat.exists
+  block:
+    - name: Download Homebrew installation script
+      get_url:
+        url: https://raw.githubusercontent.com/Homebrew/install/master/install.sh
+        dest: /tmp/install-homebrew.sh
+        mode: 'u=rwx,g=rx,o=rx'
+      notify: clean-up-homebrew-install
+
+    # Although we explicitly delete the askpass helper below, we still notify a cleanup handler.
+    # This handles the case where the play fails before the explicit cleanup.
+    - name: Create askpass helper
+      become: true
+      template:
+        src: askpass.sh
+        dest: /tmp/homebrew-askpass.sh
+        owner: root
+        group: wheel
+        mode: 'u=rwx,g=rx,o=rx'
+      notify: clean-up-askpass-helper
+
+    - name: Install Homebrew
+      command:
+        argv:
+          - /tmp/install-homebrew.sh
+      environment:
+        SUDO_ASKPASS: /tmp/homebrew-askpass.sh
+        NONINTERACTIVE: "1"
+
+    - fetch:
+        src: /Users/{{ ansible_user }}/Desktop/askpass.log
+        dest: logs
+
+    - name: Clean up askpass helper
+      become: true
+      file:
+        dest: /tmp/homebrew-askpass.sh
+        state: absent

@@ -1,0 +1,14 @@
+---
+
+- name: Clean up Homebrew installation script
+  file:
+    dest: /tmp/install-homebrew.sh
+    state: absent
+  listen: clean-up-homebrew-install
+
+- name: Clean up Homebrew askpass helper
+  become: true
+  file:
+    dest: /tmp/homebrew-askpass.sh
+    state: absent
+  listen: clean-up-askpass-helper

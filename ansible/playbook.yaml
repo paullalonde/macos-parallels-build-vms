@@ -1,0 +1,17 @@
+---
+
+- name: Provision Build VM
+  hosts: default
+  # gather_facts: false
+  tasks:
+    - name: Disable Software Updates
+      import_role:
+        name: disable-software-updates
+
+    - name: Install Homebrew
+      import_role:
+        name: install-homebrew
+
+    # - name: Install Xcode
+    #   import_role:
+    #     name: install-xcode
