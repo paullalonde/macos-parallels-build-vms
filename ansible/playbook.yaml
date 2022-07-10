@@ -2,7 +2,6 @@
 
 - name: Provision Build VM
   hosts: default
-  # gather_facts: false
   tasks:
     - name: Add SSH key
       authorized_key:

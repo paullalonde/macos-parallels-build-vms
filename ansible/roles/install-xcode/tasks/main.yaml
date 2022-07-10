@@ -1,45 +1,159 @@
 ---
 
+- name: Check Developer Mode
+  command:
+    argv:
+      - /usr/sbin/DevToolsSecurity
+      - -status
+  register: dev_tools_security
+  changed_when: false
+
+- name: Set xcode_developer_mode_enabled
+  set_fact:
+    xcode_developer_mode_enabled: "{{ dev_tools_security.stdout.find('enabled') != -1 }}"
+
+- name: Enable Developer Mode
+  become: true
+  command:
+    argv:
+      - /usr/sbin/DevToolsSecurity
+      - -enable
+  when: not xcode_developer_mode_enabled
+
+- name: Set Xcode name
+  set_fact:
+    xcode_name: Xcode_{{ xcode_version }}.app
+    xcode_xip_name: Xcode_{{ xcode_version }}.xip
+
+- name: Set Xcode path
+  set_fact:
+    xcode_path: /Applications/{{ xcode_name }}
+    xcode_downloads_dir: /Users/{{ ansible_user }}/Downloads
+
 - name: Check if Xcode is already installed
   stat:
-    path: /Applications/Xcode_{{ xcode_version }}.app
+    path: "{{ xcode_path }}"
   register: xcode
 
 - when: not xcode.stat.exists
   block:
     - name: Download Xcode XIP
       get_url:
-        url: "{{ xcode_xip_base_url }}/Xcode_{{ xcode_version }}.xip"
-        dest: /Users/{{ ansible_user }}/Downloads/Xcode_{{ xcode_version }}.xip
+        url: "{{ xcode_xip_base_url }}/{{ xcode_xip_name }}"
+        dest: "{{ xcode_downloads_dir }}/{{ xcode_xip_name }}"
         mode: 'u=rw,g=r,o=r'
       notify: clean-up-xcode-xip
 
+    # Although the XIP contains the Xcode version in its name, it always expands to a generic 'Xcode.app' bundle.
     - name: Expand Xcode XIP
       become: true
       command:
-        cmd: xip --expand /Users/{{ ansible_user }}/Downloads/Xcode_{{ xcode_version }}.xip
-        chdir: /Users/{{ ansible_user }}/Downloads
+        argv:
+          - /usr/bin/xip
+          - --expand
+          - "{{ xcode_xip_name }}"
+        chdir: "{{ xcode_downloads_dir }}"
       poll: 60
       async: "{{ xcode_xip_extraction_timeout }}" # Prevent SSH connections timing out waiting for extraction
 
+    # Move and rename the generic 'Xcode.app'
     - name: Move Xcode under /Applications
       become: true
       command:
-        cmd: mv /Users/{{ ansible_user }}/Downloads/Xcode.app /Applications/Xcode_{{ xcode_version }}.app
+        argv:
+          - /bin/mv
+          - Xcode.app
+          - "{{ xcode_path  }}"
+        chdir: "{{ xcode_downloads_dir }}"
+
+    - name: Read Xcode short version
+      command:
+        argv:
+          - /usr/bin/defaults
+          - read
+          - "{{ xcode_path }}/Contents/Info"
+          - CFBundleShortVersionString
+      register: xcode_short_version_cmd
+      changed_when: false
+
+    - name: Set Xcode short version
+      set_fact:
+        xcode_short_version: "{{ xcode_short_version_cmd.stdout | trim }}"
+
+    - name: Read Xcode build number
+      command:
+        argv:
+          - /usr/bin/defaults
+          - read
+          - "{{ xcode_path }}/Contents/Resources/LicenseInfo"
+          - licenseID
+      register: xcode_build_number_cmd
+      changed_when: false
+
+    - name: Set Xcode build number
+      set_fact:
+        xcode_build_number: "{{ xcode_build_number_cmd.stdout | trim }}"
+
+    - name: Read Xcode license type
+      command:
+        argv:
+          - /usr/bin/defaults
+          - read
+          - "{{ xcode_path }}/Contents/Resources/LicenseInfo"
+          - licenseType
+      register: xcode_license_type_cmd
+      changed_when: false
+
+    - name: Set Xcode license type
+      set_fact:
+        xcode_license_type: "{{ xcode_license_type_cmd.stdout | trim }}"
+
+    - name: Set Xcode preference keys (GM)
+      set_fact:
+        xcode_version_agreed_key: IDEXcodeVersionForAgreedToGMLicense
+        xcode_last_licence_agreed_to: IDELastGMLicenseAgreedTo
+      when: xcode_license_type == "GM"
+
+    - name: Set Xcode preference keys (Beta)
+      set_fact:
+        xcode_version_agreed_key: IDEXcodeVersionForAgreedToBetaLicense
+        xcode_last_licence_agreed_to: IDELastBetaLicenseAgreedTo
+      when: xcode_license_type != "GM"
+
+    - name: Set Xcode Version For Agreed To Licence
+      become: true
+      command:
+        argv:
+          - /usr/bin/defaults
+          - write
+          - /Library/Preferences/com.apple.dt.Xcode
+          - "{{ xcode_version_agreed_key }}"
+          - "{{ xcode_short_version }}"
+
+    - name: Set Last License Agreed To
+      become: true
+      command:
+        argv:
+          - /usr/bin/defaults
+          - write
+          - /Library/Preferences/com.apple.dt.Xcode
+          - "{{ xcode_last_licence_agreed_to }}"
+          - "{{ xcode_build_number }}"
+
+    - name: Accept Xcode license
+      become: true
+      command:
+        argv:
+          - "{{ xcode_path }}/Contents/Developer/usr/bin/xcodebuild"
+          - -license
+          - accept
+      poll: 60
+      async: "{{ xcode_accept_licence_timeout }}" # Prevent SSH connections timing out waiting for extraction
 
     - name: Select Xcode
       become: true
       command:
-        cmd: xcode-select --switch /Applications/Xcode_{{ xcode_version }}.app
-
-    - command:
-        cmd: xcode-select --print-path
-      register: xcode_tools_path
-
-    - debug:
-        msg: "xcode_tools_path = {{ xcode_tools_path }}"
-
-    - name: Accept license
-      become: true
-      command:
-        cmd: /Applications/Xcode_{{ xcode_version }}.app/Contents/Developer/usr/bin/xcodebuild -license accept
+        argv:
+          - /usr/bin/xcode-select
+          - --switch
+          - "{{ xcode_path }}"
