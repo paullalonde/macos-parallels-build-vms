@@ -56,7 +56,7 @@ The base VM must have the following characteristics:
    ```
    xcode_xip_base_url = "..."
    ```
-   The `xcode_xip_base_url` variable needs to contain the URL used to reach the Xcode XIP file.
+   The `xcode_xip_base_url` variable is the URL used to reach the Xcode XIP file.
    You need to host this yourself; downloading directly from Apple is unsupported.
 
 ## Procedure
