@@ -66,6 +66,7 @@
           - "{{ xcode_path  }}"
         chdir: "{{ xcode_downloads_dir }}"
 
+    # This step takes forever because the Xcode tooling performs some sort of self-validation on first launch.
     - name: Accept Xcode license
       become: true
       command:

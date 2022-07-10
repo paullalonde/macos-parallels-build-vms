@@ -1,10 +1,12 @@
 # MacOS Parallels Build VMs
 
 Creates a Parallels Desktop virtual machine containing basic macOS developer tools.
-It starts with a *base* VM (see below), and adds the following:
+It starts with a *base* VM (see below), and performs the following actions:
 
-- Homebrew
-- Xcode
+- Adds an SSH authorized key for the `packer` account.
+- Disables software updates.
+- Installs Homebrew.
+- Installs Xcode.
 
 Installing Xcode, in particular, is enormously time-consuming.
 For that reason, this VM doesn't install anything beyond that.
