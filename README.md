@@ -79,5 +79,5 @@ The base VM must be named and located according to the following convention:
    1. Tar & gzip the VM, producing a `.tgz` file.
    1. Compute the tgz file's checksum and save it to a file.
 1. The final outputs will be:
-   - `output/macos-${var.os_name}-build.pvm.tgz`, the tar'd and gzip'd VM.
-   - `output/macos-${var.os_name}-build.pvm.tgz.sha256`, the checksum.
+   - `output/macos-${os_name}-build.pvm.tgz`, the tar'd and gzip'd VM.
+   - `output/macos-${os_name}-build.pvm.tgz.sha256`, the checksum.

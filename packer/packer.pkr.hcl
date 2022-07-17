@@ -122,6 +122,7 @@ build {
     ]
   }
 
+  # We don't use the 'compress' post-processor, because its generated tgz isn't satisfactory.
   post-processor "shell-local" {
     script = "scripts/package-vm.sh"
 
