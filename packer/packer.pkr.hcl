@@ -9,13 +9,23 @@ packer {
   }
 }
 
-variable "os_name" {
-  description = "The name of version of macOS."
+variable "base_vm_checksum" {
+  description = "The SHA256 checksum of the base VM."
   type        = string
 }
 
-variable "source_vm" {
-  description = "The path to the source VM."
+variable "base_vm_name" {
+  description = "The name of the base VM."
+  type        = string
+}
+
+variable "base_vm_url" {
+  description = "The base URL from which to download the base VM."
+  type        = string
+}
+
+variable "os_name" {
+  description = "The name of version of macOS."
   type        = string
 }
 
@@ -25,29 +35,71 @@ variable "ssh_password" {
   sensitive   = true
 }
 
-variable "vault_password_file" {
-  description = "The path to the file containing the Ansible vault password."
-  type        = string
-}
-
 locals {
   ssh_username = "packer"
+
+  vm_name     = "macos-${var.os_name}-build"
+  pvm_name    = "${local.vm_name}.pvm"
+  tgz_name    = "${local.pvm_name}.tgz"
+  sha256_name = "${local.tgz_name}.sha256"
+
+  base_pvm_name = "${var.base_vm_name}.pvm"
+  base_tgz_name = "${local.base_pvm_name}.tgz"
 }
 
-source "parallels-pvm" "main" {
-  vm_name                = "macos-${var.os_name}-dev"
-  source_path            = var.source_vm
-  output_directory       = "vms"
-  parallels_tools_flavor = "mac"
-  ssh_username           = local.ssh_username
-  ssh_password           = var.ssh_password
-  ssh_timeout            = "5m"
-  shutdown_command       = "echo '${var.ssh_password}' | sudo -S shutdown -h now"
-  shutdown_timeout       = "10m"
-  skip_compaction        = true
+# -------------------------------------------------------
+# Download phase.
+
+source "file" "bogus" {
+  target  = "/dev/null"
+  content = "null"
 }
 
 build {
+  name = "download"
+
+  # A fake source whose only purpose is to allow us to call a provisioner.
+  sources = [
+    "source.file.bogus",
+  ]
+
+  post-processor "shell-local" {
+    script = "scripts/download-base-vm.sh"
+
+    env = {
+      BASE_VM_URL = var.base_vm_url,
+      PVM_NAME    = local.base_pvm_name,
+      SHA256      = var.base_vm_checksum,
+      TGZ_NAME    = local.base_tgz_name,
+    }
+  }
+
+  post-processor "artifice" {
+    files = [
+      "input/${local.base_pvm_name}",
+    ]
+  }
+}
+
+# -------------------------------------------------------
+# VM construction phase.
+
+source "parallels-pvm" "main" {
+  vm_name              = local.vm_name
+  source_path          = "input/${local.base_pvm_name}"
+  output_directory     = "build"
+  parallels_tools_mode = "disable"
+  ssh_username         = local.ssh_username
+  ssh_password         = var.ssh_password
+  ssh_timeout          = "5m"
+  shutdown_command     = "echo '${var.ssh_password}' | sudo -S shutdown -h now"
+  shutdown_timeout     = "10m"
+  skip_compaction      = true
+}
+
+build {
+  name = "main"
+
   sources = [
     "source.parallels-pvm.main",
   ]
@@ -60,8 +112,37 @@ build {
     extra_arguments = [
       "--extra-vars",
       "ansible_become_pass=${var.ssh_password}",
-      "--extra-vars",
-      "vault-password-file=${var.vault_password_file}",
+    ]
+  }
+
+  # The VM is built, so we don't need the inputs anymore.
+  post-processor "shell-local" {
+    inline = [
+      "rm -rf input/*"
+    ]
+  }
+
+  post-processor "shell-local" {
+    script = "scripts/package-vm.sh"
+
+    env = {
+      PVM_NAME    = local.pvm_name,
+      SHA256_NAME = local.sha256_name,
+      TGZ_NAME    = local.tgz_name,
+    }
+  }
+
+  post-processor "artifice" {
+    files = [
+      "output/${local.tgz_name}",
+      "output/${local.sha256_name}",
+    ]
+  }
+
+  # The VM is packaged as a tgz under ./output, so we don't need the built VM anymore.
+  post-processor "shell-local" {
+    inline = [
+      "rm -rf build/${local.pvm_name}"
     ]
   }
 }

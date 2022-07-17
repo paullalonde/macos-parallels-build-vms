@@ -1,5 +1,7 @@
-.temp/
-vms/
+/.temp/
+/build/
+/input/
+/output/
 .env
 secrets.pkrvars.hcl
 .DS_Store

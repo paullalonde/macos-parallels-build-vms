@@ -41,9 +41,11 @@ case "${OS}" in
   exit 21
 esac
 
-rm -rf "${SELF_DIR}/vms"
+pushd "${SELF_DIR}" >/dev/null
 
-TEMP_DIR="${SELF_DIR}/.temp"
+rm -rf build input output
+
+TEMP_DIR=.temp
 mkdir -p "${TEMP_DIR}"
 
 VAULT_PASSWORD_PATH="${TEMP_DIR}/.ansible-vault-pw"
@@ -54,8 +56,6 @@ if [[ -f "${SELF_DIR}/.env" ]]; then
 fi
 
 jq --null-input -r 'env.VAULT_PASSWORD' >"${VAULT_PASSWORD_PATH}"
-
-pushd "${SELF_DIR}" >/dev/null
 
 PACKER_DIR=packer
 PACKER_FILE="${PACKER_DIR}/packer.pkr.hcl"
@@ -68,9 +68,20 @@ fi
 
 packer fmt -check -diff "${PACKER_FILE}"
 packer init "${PACKER_FILE}"
+
+# Download the base VM.
 packer build \
+  -only 'download.*' \
+  -timestamp-ui \
   -var "os_name=${OS}" \
-  -var "vault_password_file=${VAULT_PASSWORD_PATH}" \
+  -var-file="${CONF_FILE}" \
+  "${PACKER_FILE}"
+
+# Build the new VM.
+packer build \
+  -only 'main.*' \
+  -timestamp-ui \
+  -var "os_name=${OS}" \
   -var-file="${CONF_FILE}" \
   "${PACKER_FILE}"
 
