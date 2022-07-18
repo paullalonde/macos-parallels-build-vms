@@ -16,7 +16,7 @@ That's left to other VMs that use this one as a base.
 ## Requirements
 
 - Packer 1.8
-- Parallels Desktop 17
+- Parallels Desktop 17 (Pro or Business edition)
 - Parallels Virtualization SDK 17.1.4
 - Ansible
 - A base VM
@@ -93,3 +93,8 @@ Xcode must be named and located according to the following convention:
 1. The final outputs will be:
    - `output/macos-${os_name}-build.pvm.tgz`, the tar'd and gzip'd VM.
    - `output/macos-${os_name}-build.pvm.tgz.sha256`, the checksum.
+
+## Related Repositories
+
+- [Bootable ISO images for macOS](https://github.com/paullalonde/macos-bootable-iso-images).
+- [Base VMs for macOS](https://github.com/paullalonde/macos-parallels-base-vms).
