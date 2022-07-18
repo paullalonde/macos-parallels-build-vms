@@ -47,15 +47,16 @@ rm -rf build input output
 
 TEMP_DIR=.temp
 mkdir -p "${TEMP_DIR}"
+rm -rf "${TEMP_DIR}"/*
 
-VAULT_PASSWORD_PATH="${TEMP_DIR}/.ansible-vault-pw"
-trap "{ rm -f ${VAULT_PASSWORD_PATH}; }" EXIT
+# VAULT_PASSWORD_PATH="${TEMP_DIR}/.ansible-vault-pw"
+# trap "{ rm -f ${VAULT_PASSWORD_PATH}; }" EXIT
 
 if [[ -f "${SELF_DIR}/.env" ]]; then
   source "${SELF_DIR}/.env"
 fi
 
-jq --null-input -r 'env.VAULT_PASSWORD' >"${VAULT_PASSWORD_PATH}"
+# echo "${VAULT_PASSWORD}" >"${VAULT_PASSWORD_FILE}"
 
 PACKER_DIR=packer
 PACKER_FILE="${PACKER_DIR}/packer.pkr.hcl"

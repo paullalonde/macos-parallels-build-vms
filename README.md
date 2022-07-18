@@ -4,7 +4,7 @@ Creates a Parallels Desktop virtual machine containing basic macOS developer too
 suitable for use as a build machine.
 It starts with a *base* VM (see below), and performs the following actions:
 
-- Adds an SSH authorized key for the `packer` account.
+- Adds an SSH key for the `packer` account.
 - Disables software updates.
 - Installs Homebrew.
 - Installs Xcode.
@@ -12,6 +12,15 @@ It starts with a *base* VM (see below), and performs the following actions:
 Installing Xcode, in particular, is enormously time-consuming.
 For that reason, this VM doesn't install anything beyond that.
 That's left to other VMs that use this one as a base.
+
+## Requirements
+
+- Packer 1.8
+- Parallels Desktop 17
+- Parallels Virtualization SDK 17.1.4
+- Ansible
+- A base VM
+- An Xcode XIP file
 
 #### Base VM
 
@@ -31,17 +40,22 @@ The base VM must be named and located according to the following convention:
 
 [This repository](https://github.com/paullalonde/macos-parallels-base-vms) can generate a suitable base VM.
 
-## Requirements
+#### Xcode
 
-- Packer 1.8
-- Parallels Desktop 17
-- Parallels Virtualization SDK 17.1.4
-- Ansible
-- An Xcode XIP file
-- A base VM
-- jq
+Xcode must be named and located according to the following convention:
+
+- Xcode is downloaded from this location: `${xcode_xip_base_url}/Xcode_${xcode_version}.xip`.
+- The XIP file name (`Xcode_${xcode_version}.xip`) is the file's name when downloaded from Apple.
+- The base URL (`${xcode_xip_base_url}`) is used to reach the Xcode XIP file.
+  You need to host this yourself; downloading directly from Apple is unsupported.
 
 ## Setup
+
+1. Generate an SSH key for the packer account in the VM.
+   ```bash
+   ssh-keygen
+   ```
+   The private key needs to be saved somewhere. Don't lose it!
 
 1. Create a Packer variables file for the version of macOS you are interested in, at `packer/conf/<os>.pkrvars.hcl`.
    Add the following variables:
@@ -51,16 +65,14 @@ The base VM must be named and located according to the following convention:
    - `base_vm_url` The base URL for downloading the base VM.
    - `ssh_password` The password of the `packer` account in the VM.
 
-1. (Optional) Edit the Ansible file at `group_vars/<os>.yaml`.
-   Edit the following variables:
-     - `xcode_version` The version of Xcode to install.
-       It's assumed that the matching XIP file is named `Xcode_{{ xcode_version }}.xip`;
-       this is the file's name when downloaded from Apple.
-
 1. Edit the Ansible file at `group_vars/all.yaml`.
    Edit the following variables:
-    - `xcode_xip_base_url` The URL used to reach the Xcode XIP file.
-      You need to host this yourself; downloading directly from Apple is unsupported.
+     - `xcode_xip_base_url` See above.
+
+1. Edit the Ansible file at `group_vars/<os>.yaml`.
+   Edit the following variables:
+     - `packer_ssh_public_key` The SSH public key generated in step 1.
+     - `xcode_version` (Optional) The version of Xcode to install; see above.
 
 ## Procedure
 
