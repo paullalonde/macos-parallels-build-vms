@@ -113,6 +113,14 @@ build {
       "--extra-vars",
       "ansible_become_pass=${var.ssh_password}",
     ]
+
+    ansible_env_vars = [
+      "ANSIBLE_CONFIG=./ansible/ansible.cfg"
+    ]
+  }
+
+  provisioner "breakpoint" {
+    disable = true
   }
 
   # The VM is built, so we don't need the inputs anymore.

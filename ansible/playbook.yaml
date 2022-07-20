@@ -17,6 +17,12 @@
       import_role:
         name: install-homebrew
 
+    - name: Install jq
+      get_url:
+        url: https://github.com/stedolan/jq/releases/download/{{ jq_version }}/jq-osx-amd64
+        dest: /usr/local/bin/jq
+        mode: 'u=rwx,g=rx,o=rx'
+
     - name: Install Xcode
       import_role:
         name: install-xcode

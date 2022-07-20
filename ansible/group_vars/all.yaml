@@ -4,3 +4,5 @@ ansible_python_interpreter: auto_silent
 
 # 192.168.71.161 -> sinolle.local
 xcode_xip_base_url: http://192.168.71.161:8000/packages/apple/xcode
+
+jq_version: "jq-1.5"

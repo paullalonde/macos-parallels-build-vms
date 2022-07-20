@@ -28,7 +28,7 @@
 - name: Set Xcode path
   set_fact:
     xcode_path: /Applications/{{ xcode_name }}
-    xcode_downloads_dir: /Users/{{ ansible_user }}/Downloads
+    xcode_xip_path: /Applications/{{ xcode_xip_name }}
 
 - name: Check if Xcode is already installed
   stat:
@@ -38,44 +38,47 @@
 - when: not xcode.stat.exists
   block:
     - name: Download Xcode XIP
+      become: true
       get_url:
         url: "{{ xcode_xip_base_url }}/{{ xcode_xip_name }}"
-        dest: "{{ xcode_downloads_dir }}/{{ xcode_xip_name }}"
+        dest: "{{ xcode_xip_path }}"
         mode: 'u=rw,g=r,o=r'
-      notify: clean-up-xcode-xip
+      notify: clean-up-xcode-install
 
-    # Although the XIP contains the Xcode version in its name, it always expands to a generic 'Xcode.app' bundle.
-    - name: Expand Xcode XIP
+    # When the xip-decompression and xcodebuild-license-accept steps are done normally via Ansible tasks,
+    # the process invariably hangs for a long time, after which I get an error message stating:
+    #
+    #   "You have not agreed to the Xcode license agreements, please run 'sudo xcodebuild -license' from within
+    #   a Terminal window to review and agree to the Xcode license agreements"
+    #
+    # I get this even when the very first task I run after running xip is to accept the Xcode license!
+    # I've tried many different approaches, and Ansible hangs every time.
+    #
+    # I've come to the conclusion that something in the code that Ansible sends over to the remote for every
+    # task is triggering the error. So on that assumption, I copy over a script that performs the two steps.
+
+    - name: Copy installation script
+      become: true
+      template:
+        src: install-xcode.sh
+        dest: /tmp/install-xcode.sh
+        mode: 'u=rwx,g=rx,o=rx'
+      notify: clean-up-xcode-install
+
+    - name: Run Xcode installation script
       become: true
       command:
-        argv:
-          - /usr/bin/xip
-          - --expand
-          - "{{ xcode_xip_name }}"
-        chdir: "{{ xcode_downloads_dir }}"
-      poll: 60
-      async: "{{ xcode_xip_extraction_timeout }}" # Prevent SSH connections timing out waiting for extraction
+        cmd: /tmp/install-xcode.sh
+      register: install_xcode
 
-    # Move and rename the generic 'Xcode.app'
-    - name: Move Xcode under /Applications
-      become: true
-      command:
-        argv:
-          - /bin/mv
-          - Xcode.app
-          - "{{ xcode_path  }}"
-        chdir: "{{ xcode_downloads_dir }}"
+    - name: Install Xcode log
+      debug:
+        msg: "{{ install_xcode.stdout }}"
 
-    # This step takes forever because the Xcode tooling performs some sort of self-validation on first launch.
-    - name: Accept Xcode license
-      become: true
-      command:
-        argv:
-          - "{{ xcode_path }}/Contents/Developer/usr/bin/xcodebuild"
-          - -license
-          - accept
-      poll: 60
-      async: "{{ xcode_accept_licence_timeout }}" # Prevent SSH connections timing out waiting for extraction
+    - name: Install Xcode error log
+      debug:
+        msg: "{{ install_xcode.stderr }}"
+      when: install_xcode.stderr != ""
 
     - name: Select Xcode
       become: true

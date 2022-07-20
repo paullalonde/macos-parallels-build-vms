@@ -6,8 +6,10 @@ It starts with a *base* VM (see below), and performs the following actions:
 
 - Adds an SSH key for the `packer` account.
 - Disables software updates.
-- Installs Homebrew.
-- Installs Xcode.
+- Installs the following software:
+  - [Homebrew](https://docs.brew.sh)
+  - [jq](https://stedolan.github.io/jq/manual/)
+  - Xcode
 
 Installing Xcode, in particular, is enormously time-consuming.
 For that reason, this VM doesn't install anything beyond that.

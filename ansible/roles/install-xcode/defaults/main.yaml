@@ -3,5 +3,6 @@
 xcode_version: '<REPLACE-ME>'
 xcode_xip_base_url: '<REPLACE-ME>'
 
-xcode_xip_extraction_timeout: 3600
-xcode_accept_licence_timeout: 3600
+# Xcode license-related preferences keys for GM builds.
+xcode_version_agreed_key: IDEXcodeVersionForAgreedToGMLicense
+xcode_last_licence_agreed_to: IDELastGMLicenseAgreedTo
