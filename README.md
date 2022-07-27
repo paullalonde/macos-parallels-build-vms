@@ -9,7 +9,7 @@ It starts with a *base* VM (see below), and performs the following actions:
 - Installs the following software:
   - [Homebrew](https://docs.brew.sh)
   - [jq](https://stedolan.github.io/jq/manual/)
-  - Xcode
+  - [Xcode](https://en.wikipedia.org/wiki/Xcode)
 
 Installing Xcode, in particular, is enormously time-consuming.
 For that reason, this VM doesn't install anything beyond that.
