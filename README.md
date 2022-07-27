@@ -22,9 +22,10 @@ That's left to other VMs that use this one as a base.
 - Parallels Virtualization SDK 17.1.4
 - Ansible
 - A base VM
-- An Xcode XIP file (requires an Apple Developer account).
+- An Xcode XIP file.
   This is a cryptographically signed archive of the entire Xcode installation, in an Apple-specific format.
-  XIP files for every version of Xcode can be found in the downloads area of the Apple Developer [web site](https:developer.apple.com).
+  XIP files for every version of Xcode can be found in the downloads area of the Apple Developer [web site](https://developer.apple.com).
+  Access to the downloads requires an Apple Developer account.
 
 #### Base VM
 
