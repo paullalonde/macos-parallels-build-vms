@@ -18,11 +18,13 @@ That's left to other VMs that use this one as a base.
 ## Requirements
 
 - Packer 1.8
-- Parallels Desktop 17 (Pro or Business edition)
+- Parallels Desktop 17 (Pro or Business edition, ie $$)
 - Parallels Virtualization SDK 17.1.4
 - Ansible
 - A base VM
-- An Xcode XIP file
+- An Xcode XIP file (requires an Apple Developer account).
+  This is a cryptographically signed archive of the entire Xcode installation, in an Apple-specific format.
+  XIP files for every version of Xcode can be found in the downloads area of the Apple Developer [web site](https:developer.apple.com).
 
 #### Base VM
 
@@ -46,7 +48,7 @@ The base VM must be named and located according to the following convention:
 
 Xcode must be named and located according to the following convention:
 
-- Xcode is downloaded from this location: `${xcode_xip_base_url}/Xcode_${xcode_version}.xip`.
+- The Xcode XIP file is downloaded from this location: `${xcode_xip_base_url}/Xcode_${xcode_version}.xip`.
 - The XIP file name (`Xcode_${xcode_version}.xip`) is the file's name when downloaded from Apple.
 - The base URL (`${xcode_xip_base_url}`) is used to reach the Xcode XIP file.
   You need to host this yourself; downloading directly from Apple is unsupported.
