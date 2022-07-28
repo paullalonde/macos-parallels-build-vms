@@ -64,11 +64,12 @@ Xcode must be named and located according to the following convention:
 
 1. Create a Packer variables file for the version of macOS you are interested in, at `packer/conf/<os>.pkrvars.hcl`.
    Add the following variables:
-   - `base_vm_checksum` The SHA256 checksum of the base VM.
-   - `base_vm_name` The name of the base VM, without any extension.
-     Obviously, the base VM has to actually run the correct version of macOS.
-   - `base_vm_url` The base URL for downloading the base VM.
-   - `ssh_password` The password of the `packer` account in the VM.
+     - `base_vm_checksum` The SHA256 checksum of the base VM.
+     - `base_vm_name` The name of the base VM, without any extension.
+       Obviously, the base VM has to actually run the correct version of macOS.
+     - `base_vm_url` The base URL for downloading the base VM.
+     - `os_name` The name of the macOS version in the base VM.
+     - `ssh_password` The password of the `packer` account in the VM.
 
 1. Edit the Ansible file at `group_vars/all.yaml`.
    Edit the following variables:

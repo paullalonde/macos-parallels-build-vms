@@ -5,14 +5,16 @@ set -eu
 SELF_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 function usage() {
-  echo "usage: make-build-vm.sh <options>"                             1>&2
-  echo "options:"                                                      1>&2
-  echo "  --os <name>  Required. The name of macOS to make a VM for."  1>&2
-  echo "               On of: catalina, bigsur, monterey."             1>&2
+  echo "usage: make-build-vm.sh <options>"                                 1>&2
+  echo "options:"                                                          1>&2
+  echo "  --os <name>      Required. The name of macOS to make a VM for."  1>&2
+  echo "                   One of: catalina, bigsur, monterey."            1>&2
+  echo "  --skip-download  Do not download the VM archive."                1>&2
   exit 20
 }
 
 OS=''
+DOWNLOAD=1
 
 while [[ $# -gt 0 ]]
 do
@@ -20,6 +22,11 @@ do
     --os)
     OS="$2"
     shift
+    shift
+    ;;
+
+    --skip-download)
+    DOWNLOAD=''
     shift
     ;;
 
@@ -43,15 +50,11 @@ esac
 
 pushd "${SELF_DIR}" >/dev/null
 
-rm -rf build input output
+rm -rf build output
 
 TEMP_DIR=.temp
 mkdir -p "${TEMP_DIR}"
 rm -rf "${TEMP_DIR}"/*
-
-if [[ -f "${SELF_DIR}/.env" ]]; then
-  source "${SELF_DIR}/.env"
-fi
 
 PACKER_DIR=packer
 PACKER_FILE="${PACKER_DIR}/packer.pkr.hcl"
@@ -59,25 +62,25 @@ CONF_FILE="${PACKER_DIR}/conf/${OS}.pkrvars.hcl"
 
 if [[ ! -f "${CONF_FILE}" ]]; then
   echo "Cannot locate Packer variables file '${CONF_FILE}'." 1>&2
-  exit 1
+  exit 2
 fi
 
 packer fmt -check -diff "${PACKER_FILE}"
 packer init "${PACKER_FILE}"
 
-# Download the base VM.
-packer build \
-  -only 'download.*' \
-  -timestamp-ui \
-  -var "os_name=${OS}" \
-  -var-file="${CONF_FILE}" \
-  "${PACKER_FILE}"
+if [[ -n "${DOWNLOAD}" ]]; then
+  rm -rf input
 
-# Build the new VM.
+  packer build \
+    -only 'download.*' \
+    -timestamp-ui \
+    -var-file="${CONF_FILE}" \
+    "${PACKER_FILE}"
+fi
+
 packer build \
   -only 'main.*' \
   -timestamp-ui \
-  -var "os_name=${OS}" \
   -var-file="${CONF_FILE}" \
   "${PACKER_FILE}"
 
