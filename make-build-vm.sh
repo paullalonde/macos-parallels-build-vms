@@ -40,7 +40,12 @@ if [[ -z "${OS}" ]]; then
 fi
 
 case "${OS}" in
-  catalina|bigsur|monterey)
+  catalina|monterey)
+  OS_NAME="${OS}"
+  ;;
+
+  bigsur)
+  OS_NAME=big-sur
   ;;
 
   *)
@@ -74,6 +79,7 @@ if [[ -n "${DOWNLOAD}" ]]; then
   packer build \
     -only 'download.*' \
     -timestamp-ui \
+    -var "os_name=${OS_NAME}" \
     -var-file="${CONF_FILE}" \
     "${PACKER_FILE}"
 fi
@@ -81,6 +87,7 @@ fi
 packer build \
   -only 'main.*' \
   -timestamp-ui \
+  -var "os_name=${OS_NAME}" \
   -var-file="${CONF_FILE}" \
   "${PACKER_FILE}"
 

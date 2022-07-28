@@ -69,6 +69,8 @@
       become: true
       command:
         cmd: /tmp/install-xcode.sh
+      async: 7200
+      poll: 60
       register: install_xcode
 
     - name: Install Xcode log

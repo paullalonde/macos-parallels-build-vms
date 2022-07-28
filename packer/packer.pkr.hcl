@@ -106,7 +106,7 @@ build {
 
   provisioner "ansible" {
     playbook_file = "./ansible/playbook.yaml"
-    groups        = [var.os_name]
+    groups        = [regex_replace(var.os_name, "[^_a-zA-z0-9]+", "")]
     user          = local.ssh_username
 
     extra_arguments = [
